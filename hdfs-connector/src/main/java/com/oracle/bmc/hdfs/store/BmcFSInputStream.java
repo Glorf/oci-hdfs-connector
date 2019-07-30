@@ -82,7 +82,7 @@ abstract class BmcFSInputStream extends FSInputStream {
 
         long endTime = System.nanoTime();
         long elapsedTimeMicrosec = (endTime - startTime) / 1000L;
-        BmcInstrumentation.incrementTimeElapsedSeek(elapsedTimeMicrosec);
+        BmcInstrumentation.incrementTimeElapsedSeekOps(elapsedTimeMicrosec);
         BmcInstrumentation.incrementSeekCalls(1);
     }
 

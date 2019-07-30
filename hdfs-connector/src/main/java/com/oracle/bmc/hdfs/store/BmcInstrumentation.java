@@ -46,11 +46,11 @@ public class BmcInstrumentation {
     }
 
     /* Time spent for seek calls in BMCInputStream */
-    public static long getTimeElapsedSeek() {
+    public static long getTimeElapsedSeekMusec() {
         return timeElapsedSeekTime.get();
     }
 
-    public static void incrementTimeElapsedSeek(Long incrementTime) {
+    public static void incrementTimeElapsedSeekOps(Long incrementTime) {
         timeElapsedSeekTime.getAndAdd(incrementTime);
     }
 
