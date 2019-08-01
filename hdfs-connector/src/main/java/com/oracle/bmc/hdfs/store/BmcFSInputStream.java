@@ -20,6 +20,7 @@ import com.oracle.bmc.model.Range;
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.requests.GetObjectRequest;
 import com.oracle.bmc.objectstorage.responses.GetObjectResponse;
+import com.oracle.bmc.hdfs.store.BmcInstrumentation;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -175,6 +176,8 @@ abstract class BmcFSInputStream extends FSInputStream {
     }
 
     private void lazySeek(long targetPos) throws IOException {
+        long startTime = System.nanoTime();
+
         //For lazy seek
         seekInStream(targetPos);
 
@@ -182,6 +185,11 @@ abstract class BmcFSInputStream extends FSInputStream {
         if (sourceInputStream == null) {
             validateState(targetPos);
         }
+
+        long endTime = System.nanoTime();
+        long elapsedTimeMicrosec = (endTime - startTime) / 1000L;
+        BmcInstrumentation.incrementTimeElapsedSeekOps(elapsedTimeMicrosec);
+        BmcInstrumentation.incrementSeekCalls(1);
     }
 
 
@@ -196,12 +204,22 @@ abstract class BmcFSInputStream extends FSInputStream {
             return -1;
         }
 
+        long startTime = System.nanoTime();
+        // System.err.println(("INTRUMENTATION: Point 2! " + System.nanoTime()));
         final int byteRead = this.sourceInputStream.read();
+        long endTime = System.nanoTime();
+        long elapsedTimeMicrosec = (endTime - startTime) / 1000L;
+
         if (byteRead != EOF) {
             this.currentPosition++;
             this.nextPosition++;
             this.statistics.incrementBytesRead(1L);
         }
+
+        BmcInstrumentation.incrementReadCalls(1);
+        BmcInstrumentation.incrementBytesRead((long) byteRead);
+        BmcInstrumentation.incrementTimeElapsedReadOps(elapsedTimeMicrosec);
+
         return byteRead;
     }
 
@@ -216,13 +234,23 @@ abstract class BmcFSInputStream extends FSInputStream {
             return -1;
         }
 
+        long startTime = System.nanoTime();
+        //System.err.println(("INTRUMENTATION: Point 3! " + System.nanoTime()));
         final int bytesRead = this.sourceInputStream.read(b, off, len);
+        long endTime = System.nanoTime();
+        long elapsedTimeMicrosec = (endTime - startTime) / 1000L;
+
         if (bytesRead != EOF) {
             this.currentPosition += bytesRead;
             this.nextPosition += bytesRead;
             this.statistics.incrementBytesRead(bytesRead);
             LOG.debug("Read {} bytes", bytesRead);
         }
+
+        BmcInstrumentation.incrementReadCalls(1);
+        BmcInstrumentation.incrementBytesRead((long) bytesRead);
+        BmcInstrumentation.incrementTimeElapsedReadOps(elapsedTimeMicrosec);
+
         return bytesRead;
     }
 
